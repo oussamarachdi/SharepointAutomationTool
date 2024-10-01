@@ -5,7 +5,8 @@ const axios = require('axios');
 const schedule = require('node-schedule');
 const app = express();
 const dotenv = require('dotenv');
-const path = require('path');
+const path = require('path'); // Ensure this line is present to use the path module
+const fs = require('fs'); // Add this line to use the fs module
 dotenv.config(); // Ensure this is called at the top
 
 const PORT = process.env.PORT || 4000;
@@ -13,7 +14,6 @@ const PORT = process.env.PORT || 4000;
 app.use(cors());
 app.use(express.json());
 
-// Log environment variables to check if they are loaded correctly
 console.log('EMAIL_ADDRESS:', process.env.EMAIL_ADDRESS);
 console.log('EMAIL_RECEIVER:', process.env.EMAIL_RECEIVER);
 
@@ -31,24 +31,49 @@ function sendEmail() {
         auth: auth
     });
 
+    // Get today's date in yyyymmdd format
     const today = new Date();
     const formattedDate = today.getFullYear() +
         ('0' + (today.getMonth() + 1)).slice(-2) +
         ('0' + today.getDate()).slice(-2);
-    const attachmentPath = path.join(__dirname, 'uploads', `${formattedDate}.zip`);
-    
+    const attachmentPath = path.join(__dirname, '../uploads', `${formattedDate}.zip`); // Adjust the path to include the uploads folder one level up
+
+    // Log the date and attachment path to verify them
+    console.log('Formatted Date:', formattedDate);
+    console.log('Attachment Path:', attachmentPath);
+
+    // Ensure the uploads directory exists
+    const uploadsDir = path.join(__dirname, '../uploads');
+    if (!fs.existsSync(uploadsDir)) {
+        console.log('Uploads directory does not exist, creating it...');
+        fs.mkdirSync(uploadsDir);
+    }
+
+    // List the contents of the uploads directory
+    console.log('Contents of uploads directory:', fs.readdirSync(uploadsDir));
+
+    // Check if the file exists
+    if (!fs.existsSync(attachmentPath)) {
+        console.error('File does not exist:', attachmentPath);
+        return Promise.reject({ message: 'File does not exist', error: `File not found: ${attachmentPath}` });
+    }
+
+    // Log file stats to check permissions and other details
+    const fileStats = fs.statSync(attachmentPath);
+    console.log('File Stats:', fileStats);
+
     const mail_config = {
         from: {
             name: process.env.EMAIL_NAME,
             address: process.env.EMAIL_ADDRESS,
         },
-        to: process.env.EMAIL_RECEIVER, // Ensure this is correctly set
-        subject: `Info sur les contrats de date ${new Date().toLocaleDateString()}`,
-        text: 'This is a test email.', // Add a text field for the email body
+        to: process.env.EMAIL_RECEIVER,
+        subject: `Info sur les contrats de date ${today.toLocaleDateString()}`,
+        text: 'This is a test email.',
         attachments: [
             {
                 filename: `${formattedDate}.zip`,
-                path: attachmentPath,
+                path: attachmentPath
             }
         ]
     };
