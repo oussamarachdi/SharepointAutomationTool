@@ -128,7 +128,8 @@ def run_bot():
         # Wait for the download to start
         print("Waiting for the download to start...")
         print("Waiting for the site to load and performing actions...")
-
+        time.sleep(60)
+        
         # After all actions are completed:
         driver.quit()
 

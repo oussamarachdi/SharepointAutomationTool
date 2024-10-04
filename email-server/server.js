@@ -68,8 +68,8 @@ function sendEmail() {
             address: process.env.EMAIL_ADDRESS,
         },
         to: process.env.EMAIL_RECEIVER,
-        subject: `Info sur les contrats de date ${today.toLocaleDateString()}`,
-        text: 'This is a test email.',
+        subject: `Contrats Microcred ${today.toLocaleDateString()}`,
+        text: `Bonjour,\n\nVeuillez trouver ci-joint les contrats signés en date du ${today.toLocaleDateString()}.\n\nCordialement,`,
         attachments: [
             {
                 filename: `${formattedDate}.zip`,
@@ -77,7 +77,7 @@ function sendEmail() {
             }
         ]
     };
-
+    
     return new Promise((resolve, reject) => {
         transporter.sendMail(mail_config, (err, info) => {
             if (err) {
@@ -85,10 +85,12 @@ function sendEmail() {
                 return reject({ message: 'An error occurred while sending the email', error: err.message });
             }
             console.log('Email sent:', info);
+        
             return resolve({ message: "Email sent successfully" });
         });
     });
 }
+
 
 app.post('/notify', async (req, res) => {
     try {
@@ -99,6 +101,16 @@ app.post('/notify', async (req, res) => {
         res.status(500).send('Error sending email');
     }
 });
+
+//Scedule the task at 9 pm
+/* schedule.scheduleJob('0 21 * * *', async () => {
+    try {
+        const response = await axios.post('http://localhost:5000/run_bot');
+        console.log(response.data);
+    } catch (error) {
+        console.log(error);
+    }
+}); */
 
 // Schedule the task to run a few minutes from now for testing
 const testDate = new Date(Date.now() + 1 * 60 * 1000); // 5 minutes from now
